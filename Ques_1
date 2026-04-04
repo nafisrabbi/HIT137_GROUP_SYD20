@@ -22,18 +22,25 @@ So we treat a-m as its own 13-letter ring, and n-z as another 13-letter ring (sa
 and N-Z). That way decrypt always undoes encrypt properly.
 """
 from __future__ import annotations
-import os
 
-RING = 13  # a-m and n-z are separate 13-letter rings
+from pathlib import Path
+
+RING = 13
 
 
 def _shift_in_block(ch: str, steps: int, forward: bool, is_lower: bool) -> str:
     """
-    Shift a letter inside its own 13-letter block only.
-    Lowercase blocks: a-m, n-z
-    Uppercase blocks: A-M, N-Z
+    Shift a character within its 13-letter alphabet block.
+
+    Lowercase blocks:
+    - a-m
+    - n-z
+
+    Uppercase blocks:
+    - A-M
+    - N-Z
     """
-    steps = steps % RING
+    steps %= RING
 
     if is_lower:
         base = ord("a") if "a" <= ch <= "m" else ord("n")
@@ -46,131 +53,95 @@ def _shift_in_block(ch: str, steps: int, forward: bool, is_lower: bool) -> str:
 
 
 def encrypt_one_char(ch: str, shift1: int, shift2: int) -> str:
-    """
-    Encrypt one character using the assignment rules.
-    """
-    s1, s2 = shift1, shift2
-
-    # lowercase
+    """Encrypt one character according to the assignment rules."""
     if "a" <= ch <= "m":
-        return _shift_in_block(ch, s1 * s2, True, True)
+        return _shift_in_block(ch, shift1 * shift2, True, True)
     if "n" <= ch <= "z":
-        return _shift_in_block(ch, s1 + s2, False, True)
-
-    # uppercase
+        return _shift_in_block(ch, shift1 + shift2, False, True)
     if "A" <= ch <= "M":
-        return _shift_in_block(ch, s1, False, False)
+        return _shift_in_block(ch, shift1, False, False)
     if "N" <= ch <= "Z":
-        return _shift_in_block(ch, s2 * s2, True, False)
-
-    # non-letters unchanged
+        return _shift_in_block(ch, shift2 * shift2, True, False)
     return ch
 
 
 def decrypt_one_char(ch: str, shift1: int, shift2: int) -> str:
-    """
-    Decrypt one character by reversing the assignment rules.
-    """
-    s1, s2 = shift1, shift2
-
-    # lowercase
+    """Decrypt one character according to the assignment rules."""
     if "a" <= ch <= "m":
-        return _shift_in_block(ch, s1 * s2, False, True)
+        return _shift_in_block(ch, shift1 * shift2, False, True)
     if "n" <= ch <= "z":
-        return _shift_in_block(ch, s1 + s2, True, True)
-
-    # uppercase
+        return _shift_in_block(ch, shift1 + shift2, True, True)
     if "A" <= ch <= "M":
-        return _shift_in_block(ch, s1, True, False)
+        return _shift_in_block(ch, shift1, True, False)
     if "N" <= ch <= "Z":
-        return _shift_in_block(ch, s2 * s2, False, False)
-
-    # non-letters unchanged
+        return _shift_in_block(ch, shift2 * shift2, False, False)
     return ch
 
 
 def encrypt_text(text: str, shift1: int, shift2: int) -> str:
-    """
-    Encrypt an entire string.
-    """
-    out = []
-    for ch in text:
-        out.append(encrypt_one_char(ch, shift1, shift2))
-    return "".join(out)
+    """Encrypt a full string."""
+    return "".join(encrypt_one_char(ch, shift1, shift2) for ch in text)
 
 
 def decrypt_text(text: str, shift1: int, shift2: int) -> str:
-    """
-    Decrypt an entire string.
-    """
-    out = []
-    for ch in text:
-        out.append(decrypt_one_char(ch, shift1, shift2))
-    return "".join(out)
+    """Decrypt a full string."""
+    return "".join(decrypt_one_char(ch, shift1, shift2) for ch in text)
 
 
-def encrypt_file(shift1: int, shift2: int, folder: str | None = None) -> None:
-    """
-    Read raw_text.txt and write encrypted_text.txt
-    """
-    base = folder or os.path.dirname(os.path.abspath(__file__))
-    raw_path = os.path.join(base, "raw_text.txt")
-    out_path = os.path.join(base, "encrypted_text.txt")
+def encrypt_file(shift1: int, shift2: int, folder: Path) -> None:
+    """Read raw_text.txt and write encrypted_text.txt."""
+    raw_path = folder / "raw_text.txt"
+    out_path = folder / "encrypted_text.txt"
 
-    with open(raw_path, "r", encoding="utf-8") as f:
-        raw = f.read()
-
-    encrypted = encrypt_text(raw, shift1, shift2)
-
-    with open(out_path, "w", encoding="utf-8") as f:
-        f.write(encrypted)
+    try:
+        raw = raw_path.read_text(encoding="utf-8")
+        encrypted = encrypt_text(raw, shift1, shift2)
+        out_path.write_text(encrypted, encoding="utf-8")
+    except FileNotFoundError:
+        print(f"Error: {raw_path.name} was not found.")
+    except Exception as e:
+        print(f"Error while encrypting: {e}")
 
 
-def decrypt_file(shift1: int, shift2: int, folder: str | None = None) -> None:
-    """
-    Read encrypted_text.txt and write decrypted_text.txt
-    """
-    base = folder or os.path.dirname(os.path.abspath(__file__))
-    enc_path = os.path.join(base, "encrypted_text.txt")
-    out_path = os.path.join(base, "decrypted_text.txt")
+def decrypt_file(shift1: int, shift2: int, folder: Path) -> None:
+    """Read encrypted_text.txt and write decrypted_text.txt."""
+    enc_path = folder / "encrypted_text.txt"
+    out_path = folder / "decrypted_text.txt"
 
-    with open(enc_path, "r", encoding="utf-8") as f:
-        enc = f.read()
-
-    decrypted = decrypt_text(enc, shift1, shift2)
-
-    with open(out_path, "w", encoding="utf-8") as f:
-        f.write(decrypted)
+    try:
+        enc = enc_path.read_text(encoding="utf-8")
+        decrypted = decrypt_text(enc, shift1, shift2)
+        out_path.write_text(decrypted, encoding="utf-8")
+    except FileNotFoundError:
+        print(f"Error: {enc_path.name} was not found.")
+    except Exception as e:
+        print(f"Error while decrypting: {e}")
 
 
-def verify_decryption(folder: str | None = None) -> None:
-    """
-    Compare raw_text.txt and decrypted_text.txt
-    """
-    base = folder or os.path.dirname(os.path.abspath(__file__))
-    raw_path = os.path.join(base, "raw_text.txt")
-    dec_path = os.path.join(base, "decrypted_text.txt")
+def verify_decryption(folder: Path) -> None:
+    """Compare raw_text.txt and decrypted_text.txt."""
+    raw_path = folder / "raw_text.txt"
+    dec_path = folder / "decrypted_text.txt"
 
-    with open(raw_path, "r", encoding="utf-8") as f:
-        original = f.read()
+    try:
+        original = raw_path.read_text(encoding="utf-8")
+        decrypted = dec_path.read_text(encoding="utf-8")
 
-    with open(dec_path, "r", encoding="utf-8") as f:
-        decrypted = f.read()
-
-    if original == decrypted:
-        print("Decryption successful: decrypted file matches the original.")
-    else:
-        print("Decryption FAILED: decrypted file does NOT match the original.")
+        if original == decrypted:
+            print("Decryption successful: decrypted file matches the original.")
+        else:
+            print("Decryption FAILED: decrypted file does NOT match the original.")
+    except FileNotFoundError as e:
+        print(f"Error: Missing file - {e.filename}")
+    except Exception as e:
+        print(f"Error during verification: {e}")
 
 
 def _ask_int(label: str) -> int:
-    """
-    Keep asking until user enters an integer.
-    """
+    """Keep asking until the user enters an integer."""
     while True:
-        s = input(label).strip()
         try:
-            return int(s)
+            return int(input(label).strip())
         except ValueError:
             print("That was not an integer, try again.")
 
@@ -181,7 +152,7 @@ def main() -> None:
     shift1 = _ask_int("Enter shift1 (integer): ")
     shift2 = _ask_int("Enter shift2 (integer): ")
 
-    base = os.path.dirname(os.path.abspath(__file__))
+    base = Path(__file__).resolve().parent
 
     encrypt_file(shift1, shift2, base)
     print("Wrote encrypted_text.txt (from raw_text.txt).")
