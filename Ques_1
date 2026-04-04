@@ -26,9 +26,7 @@ from __future__ import annotations
 
 import os
 
-
 RING = 13  # a-m is 13 letters, n-z is another 13 letters (same for upper case)
-
 
 def _shift_in_lower_block(ch: str, steps: int, forward: bool) -> str:
     """
@@ -48,7 +46,6 @@ def _shift_in_lower_block(ch: str, steps: int, forward: bool) -> str:
         i = (i - steps) % RING
     return chr(base + i)
 
-
 def _shift_in_upper_block(ch: str, steps: int, forward: bool) -> str:
     steps = steps % RING
     if "A" <= ch <= "M":
@@ -62,7 +59,6 @@ def _shift_in_upper_block(ch: str, steps: int, forward: bool) -> str:
     else:
         i = (i - steps) % RING
     return chr(base + i)
-
 
 def encrypt_one_char(ch: str, shift1: int, shift2: int) -> str:
     """Encrypt a single character using the assignment rules."""
@@ -83,7 +79,6 @@ def encrypt_one_char(ch: str, shift1: int, shift2: int) -> str:
     # everything else (digits, punctuation, newline, space) stays
     return ch
 
-
 def decrypt_one_char(ch: str, shift1: int, shift2: int) -> str:
     """
     Undo encrypt_one_char (same half of the alphabet, opposite direction).
@@ -101,7 +96,6 @@ def decrypt_one_char(ch: str, shift1: int, shift2: int) -> str:
         return _shift_in_upper_block(ch, s2 * s2, forward=False)
 
     return ch
-
 
 def encrypt_text(text: str, shift1: int, shift2: int) -> str:
     """Encrypt a whole string character by character."""
@@ -136,7 +130,6 @@ def encrypt_file(shift1: int, shift2: int, folder: str | None = None) -> None:
     with open(out_path, "w", encoding="utf-8") as f:
         f.write(encrypted)
 
-
 def decrypt_file(shift1: int, shift2: int, folder: str | None = None) -> None:
     """Read encrypted_text.txt, write decrypted_text.txt."""
     base = folder or os.path.dirname(os.path.abspath(__file__))
@@ -150,7 +143,6 @@ def decrypt_file(shift1: int, shift2: int, folder: str | None = None) -> None:
 
     with open(out_path, "w", encoding="utf-8") as f:
         f.write(decrypted)
-
 
 def verify_decryption(folder: str | None = None) -> None:
     """
@@ -170,7 +162,6 @@ def verify_decryption(folder: str | None = None) -> None:
     else:
         print("Decryption FAILED: decrypted file does NOT match the original.")
 
-
 def _ask_int(label: str) -> int:
     """Keep asking until user types an integer (student-proof input)."""
     while True:
@@ -179,7 +170,6 @@ def _ask_int(label: str) -> int:
             return int(s)
         except ValueError:
             print("That was not an integer, try again.")
-
 
 def main() -> None:
     print("=== Question 1: file encrypt / decrypt ===\n")
@@ -195,7 +185,6 @@ def main() -> None:
     print('Wrote decrypted_text.txt (from encrypted_text.txt).')
 
     verify_decryption(base)
-
 
 if __name__ == "__main__":
     main()
