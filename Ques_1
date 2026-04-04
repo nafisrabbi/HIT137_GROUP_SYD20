@@ -1,0 +1,201 @@
+"""
+HIT137 Assignment 2 - Question 1
+Simple encrypt / decrypt for a text file.
+
+We read shift1 and shift2 from the user, then:
+- encrypt raw_text.txt -> encrypted_text.txt
+- decrypt encrypted_text.txt -> decrypted_text.txt
+- check decrypted file matches the original
+
+Rules (only change letters; spaces, numbers, symbols stay the same):
+LOWERCASE
+  a to m  -> shift FORWARD by (shift1 * shift2)
+  n to z  -> shift BACKWARD by (shift1 + shift2)
+UPPERCASE
+  A to M  -> shift BACKWARD by shift1
+  N to Z  -> shift FORWARD by (shift2 * shift2)   # spec means shift2 squared
+
+IMPORTANT (why we rotate inside each half only):
+If we wrapped around the full 26-letter alphabet, two different letters can encrypt to the
+same letter for some shift pairs — then decrypt cannot know which letter you started with.
+So we treat a-m as its own 13-letter ring, and n-z as another 13-letter ring (same for A-M
+and N-Z). That way decrypt always undoes encrypt properly.
+"""
+
+from __future__ import annotations
+
+import os
+
+
+RING = 13  # a-m is 13 letters, n-z is another 13 letters (same for upper case)
+
+
+def _shift_in_lower_block(ch: str, steps: int, forward: bool) -> str:
+    """
+    Move inside a-m OR inside n-z only (never jump between the two halves).
+    ch must already be in the correct half for that block.
+    """
+    steps = steps % RING
+    if "a" <= ch <= "m":
+        base = ord("a")
+        i = ord(ch) - base
+    else:
+        base = ord("n")
+        i = ord(ch) - base
+    if forward:
+        i = (i + steps) % RING
+    else:
+        i = (i - steps) % RING
+    return chr(base + i)
+
+
+def _shift_in_upper_block(ch: str, steps: int, forward: bool) -> str:
+    steps = steps % RING
+    if "A" <= ch <= "M":
+        base = ord("A")
+        i = ord(ch) - base
+    else:
+        base = ord("N")
+        i = ord(ch) - base
+    if forward:
+        i = (i + steps) % RING
+    else:
+        i = (i - steps) % RING
+    return chr(base + i)
+
+
+def encrypt_one_char(ch: str, shift1: int, shift2: int) -> str:
+    """Encrypt a single character using the assignment rules."""
+    s1, s2 = shift1, shift2
+
+    # lowercase block
+    if "a" <= ch <= "m":
+        return _shift_in_lower_block(ch, s1 * s2, forward=True)
+    if "n" <= ch <= "z":
+        return _shift_in_lower_block(ch, s1 + s2, forward=False)
+
+    # uppercase block
+    if "A" <= ch <= "M":
+        return _shift_in_upper_block(ch, s1, forward=False)
+    if "N" <= ch <= "Z":
+        return _shift_in_upper_block(ch, s2 * s2, forward=True)
+
+    # everything else (digits, punctuation, newline, space) stays
+    return ch
+
+
+def decrypt_one_char(ch: str, shift1: int, shift2: int) -> str:
+    """
+    Undo encrypt_one_char (same half of the alphabet, opposite direction).
+    """
+    s1, s2 = shift1, shift2
+
+    if "a" <= ch <= "m":
+        return _shift_in_lower_block(ch, s1 * s2, forward=False)
+    if "n" <= ch <= "z":
+        return _shift_in_lower_block(ch, s1 + s2, forward=True)
+
+    if "A" <= ch <= "M":
+        return _shift_in_upper_block(ch, s1, forward=True)
+    if "N" <= ch <= "Z":
+        return _shift_in_upper_block(ch, s2 * s2, forward=False)
+
+    return ch
+
+
+def encrypt_text(text: str, shift1: int, shift2: int) -> str:
+    """Encrypt a whole string character by character."""
+    out = []
+    for ch in text:
+        out.append(encrypt_one_char(ch, shift1, shift2))
+    return "".join(out)
+
+
+def decrypt_text(text: str, shift1: int, shift2: int) -> str:
+    """Decrypt a whole string."""
+    out = []
+    for ch in text:
+        out.append(decrypt_one_char(ch, shift1, shift2))
+    return "".join(out)
+
+
+def encrypt_file(shift1: int, shift2: int, folder: str | None = None) -> None:
+    """
+    Read raw_text.txt, write encrypted_text.txt.
+    folder = where the files live (defaults to this script's folder).
+    """
+    base = folder or os.path.dirname(os.path.abspath(__file__))
+    raw_path = os.path.join(base, "raw_text.txt")
+    out_path = os.path.join(base, "encrypted_text.txt")
+
+    with open(raw_path, "r", encoding="utf-8") as f:
+        raw = f.read()
+
+    encrypted = encrypt_text(raw, shift1, shift2)
+
+    with open(out_path, "w", encoding="utf-8") as f:
+        f.write(encrypted)
+
+
+def decrypt_file(shift1: int, shift2: int, folder: str | None = None) -> None:
+    """Read encrypted_text.txt, write decrypted_text.txt."""
+    base = folder or os.path.dirname(os.path.abspath(__file__))
+    enc_path = os.path.join(base, "encrypted_text.txt")
+    out_path = os.path.join(base, "decrypted_text.txt")
+
+    with open(enc_path, "r", encoding="utf-8") as f:
+        enc = f.read()
+
+    decrypted = decrypt_text(enc, shift1, shift2)
+
+    with open(out_path, "w", encoding="utf-8") as f:
+        f.write(decrypted)
+
+
+def verify_decryption(folder: str | None = None) -> None:
+    """
+    Compare raw_text.txt with decrypted_text.txt and print ok or not ok.
+    """
+    base = folder or os.path.dirname(os.path.abspath(__file__))
+    raw_path = os.path.join(base, "raw_text.txt")
+    dec_path = os.path.join(base, "decrypted_text.txt")
+
+    with open(raw_path, "r", encoding="utf-8") as f:
+        original = f.read()
+    with open(dec_path, "r", encoding="utf-8") as f:
+        fixed = f.read()
+
+    if original == fixed:
+        print("Decryption successful: decrypted file matches the original.")
+    else:
+        print("Decryption FAILED: decrypted file does NOT match the original.")
+
+
+def _ask_int(label: str) -> int:
+    """Keep asking until user types an integer (student-proof input)."""
+    while True:
+        s = input(label).strip()
+        try:
+            return int(s)
+        except ValueError:
+            print("That was not an integer, try again.")
+
+
+def main() -> None:
+    print("=== Question 1: file encrypt / decrypt ===\n")
+
+    shift1 = _ask_int("Enter shift1 (integer): ")
+    shift2 = _ask_int("Enter shift2 (integer): ")
+
+    base = os.path.dirname(os.path.abspath(__file__))
+    encrypt_file(shift1, shift2, base)
+    print('Wrote encrypted_text.txt (from raw_text.txt).')
+
+    decrypt_file(shift1, shift2, base)
+    print('Wrote decrypted_text.txt (from encrypted_text.txt).')
+
+    verify_decryption(base)
+
+
+if __name__ == "__main__":
+    main()

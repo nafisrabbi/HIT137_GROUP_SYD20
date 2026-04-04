@@ -1,0 +1,3 @@
+Hello from HIT137!
+Lowercase test: abc mno xyz
+Numbers stay 123 and symbols @#$ ok.
