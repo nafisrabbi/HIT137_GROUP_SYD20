@@ -1,0 +1,24 @@
+Input: 3 + 5
+Tree: (+ 3 5)
+Tokens: [NUM:3] [OP:+] [NUM:5] [END]
+Result: 8
+
+Input: 10 / 2
+Tree: (/ 10 2)
+Tokens: [NUM:10] [OP:/] [NUM:2] [END]
+Result: 5
+
+Input: (2 + 3) * 4
+Tree: (* (+ 2 3) 4)
+Tokens: [LPAREN:(] [NUM:2] [OP:+] [NUM:3] [RPAREN:)] [OP:*] [NUM:4] [END]
+Result: 20
+
+Input: -5 + 3
+Tree: (+ (- 5) 3)
+Tokens: [OP:-] [NUM:5] [OP:+] [NUM:3] [END]
+Result: -2
+
+Input: 3 @ 5
+Tree: ERROR
+Tokens: ERROR
+Result: ERROR
