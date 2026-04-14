@@ -1,26 +1,36 @@
 """
-HIT137 Assignment 2 - Question 1
-Simple encrypt / decrypt for a text file.
+HIT137 Assignment 2 – Question 1
+File Encryption and Decryption Program
 
-We read shift1 and shift2 from the user, then:
-- encrypt raw_text.txt -> encrypted_text.txt
-- decrypt encrypted_text.txt -> decrypted_text.txt
-- check decrypted file matches the original
+This program performs encryption and decryption on a text file using custom shift rules.
 
-Rules (only change letters; spaces, numbers, symbols stay the same):
-LOWERCASE
-  a to m  -> shift FORWARD by (shift1 * shift2)
-  n to z  -> shift BACKWARD by (shift1 + shift2)
-UPPERCASE
-  A to M  -> shift BACKWARD by shift1
-  N to Z  -> shift FORWARD by (shift2 * shift2)   # spec means shift2 squared
+Workflow:
+- Reads input from raw_text.txt
+- Encrypts the content and writes to encrypted_text.txt
+- Decrypts the encrypted file and writes to decrypted_text.txt
+- Verifies that the decrypted file matches the original input
 
-IMPORTANT (why we rotate inside each half only):
-If we wrapped around the full 26-letter alphabet, two different letters can encrypt to the
-same letter for some shift pairs — then decrypt cannot know which letter you started with.
-So we treat a-m as its own 13-letter ring, and n-z as another 13-letter ring (same for A-M
-and N-Z). That way decrypt always undoes encrypt properly.
+Encryption Rules:
+- Only alphabetic characters are modified
+- Digits, spaces, and special characters remain unchanged
+
+Lowercase letters:
+- a–m → shifted forward by (shift1 × shift2)
+- n–z → shifted backward by (shift1 + shift2)
+
+Uppercase letters:
+- A–M → shifted backward by shift1
+- N–Z → shifted forward by (shift2²)
+
+Design Note:
+The alphabet is divided into two 13-letter blocks (a–m and n–z, as well as A–M and N–Z).
+Shifting is restricted within each block to maintain a one-to-one mapping, ensuring that
+each encrypted character can be uniquely reversed during decryption. If shifting were applied
+across the full 26-letter alphabet, different characters could map to the same result for
+certain shift values, making accurate decryption impossible. By treating each half as a
+separate 13-letter ring, the encryption remains fully reversible.
 """
+
 from __future__ import annotations
 
 from pathlib import Path
