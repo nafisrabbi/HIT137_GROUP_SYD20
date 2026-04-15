@@ -16,7 +16,6 @@ Writes output.txt next to the input file. Result formatting is basic.
 from __future__ import annotations
 
 import os
-import sys
 from typing import Any, List, Optional, Tuple
 
 # Data shapes we use everywhere (no classes, just tuples)
@@ -372,13 +371,18 @@ def format_result_v1(value: Optional[float]) -> str:
 
 
 def main() -> None:
-    # Input file: from command line, or default sample next to this script
-    if len(sys.argv) >= 2:
-        input_path = sys.argv[1]
-    else:
-        here = os.path.dirname(os.path.abspath(__file__))
-        input_path = os.path.join(here, "sample_input.txt")
-
+    here = os.path.dirname(os.path.abspath(__file__))
+    print(
+        "Enter the INPUT text file name (type the full name including the extension, "
+        "for example: sample_input.txt"
+    )
+    print("If the file is in the same folder as this program, just the file name is enough.")
+    file_name = input("File name: ").strip()
+    if not file_name:
+        print("No file name entered. Stopping.")
+        return
+    # Relative names are looked up next to this script; absolute paths work as-is
+    input_path = file_name if os.path.isabs(file_name) else os.path.join(here, file_name)
     input_path = os.path.abspath(input_path)
     folder = os.path.dirname(input_path)
     out_path = os.path.join(folder, "output.txt")
