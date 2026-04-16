@@ -1,5 +1,49 @@
-# evaluator.py
-# HIT137 Assignment - Question 2
+"""
+HIT137 Assignment 2 – Question 2
+Mathematical Expression Evaluator
+
+This program reads mathematical expressions from a text file, one expression per line,
+tokenises each expression, parses it using recursive descent parsing, evaluates the
+result, and writes the output to a file in the required format.
+
+Workflow:
+- Reads expressions from an input text file
+- Tokenises each expression into NUM, OP, LPAREN, RPAREN, and END tokens
+- Parses each expression according to operator precedence rules
+- Builds an expression tree representation
+- Evaluates the expression recursively
+- Writes Input, Tree, Tokens, and Result to output.txt
+
+Supported Features:
+- Binary operators: +, -, *, /
+- Parentheses with nested expressions
+- Unary negation, such as -5, --5, and -(3+4)
+- Implicit multiplication, such as 2(3+4) or (2+1)(3+1)
+
+Parsing Design:
+The program uses recursive descent parsing with separate functions for each
+precedence level:
+- parse_expression() handles addition and subtraction
+- parse_term() handles multiplication, division, and implicit multiplication
+- parse_factor() handles unary negation
+- parse_primary() handles numbers and parenthesised expressions
+
+Expression Tree:
+- Binary operations are represented as (op left right)
+- Unary negation is represented as (neg operand)
+- Numeric values form the leaf nodes of the tree
+
+Evaluation and Error Handling:
+The tree is evaluated recursively. Invalid characters, syntax errors, division by zero,
+unsupported unary plus, and malformed expressions produce ERROR for that expression.
+
+Output Format:
+For each expression, the program writes exactly four lines:
+- Input: original expression
+- Tree: parsed expression tree or ERROR
+- Tokens: token list or ERROR
+- Result: evaluated result or ERROR
+"""
 
 import os
 
